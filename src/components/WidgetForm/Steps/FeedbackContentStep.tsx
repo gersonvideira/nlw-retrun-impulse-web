@@ -1,7 +1,9 @@
 import { ArrowLeft, Camera } from "phosphor-react"
 import { FormEvent, useState } from "react"
 import { FeedbackType, feedbackTypes } from ".."
+import { api } from "../../../lib/api"
 import { CloseButton } from "../../CloseButton"
+import { LoadgingImage } from "../../LoadgingImage"
 import { ScreenshotButton } from "./ScreenshotButton"
 
 
@@ -11,22 +13,32 @@ interface FeedbackContentStepProps {
     onFeedbackRestartRequested: () => void
     onFeedbackSend: () => void
 }
-export const FeedbackContentStep = ({ 
-    feedbackType, 
-    onFeedbackRestartRequested, 
+export const FeedbackContentStep = ({
+    feedbackType,
+    onFeedbackRestartRequested,
     onFeedbackSend }: FeedbackContentStepProps) => {
 
     const [screenshot, setScreenshot] = useState<string | null>(null)
     const [comment, setComment] = useState('')
+    const [isSendingFeedback, setIsSendingFeedback] = useState(false)
 
     const feedbackTypeInfo = feedbackTypes[feedbackType]
 
-    const handleSubmitFeedback = (event: FormEvent) => {
+    const handleSubmitFeedback = async (event: FormEvent) => {
         event.preventDefault()
-        console.log(
-            screenshot,
-            comment
-        )
+        setIsSendingFeedback(true)
+        // console.log(
+        //     screenshot,
+        //     comment
+        // )
+
+        await api.post('/feedback', {
+            type: feedbackType,
+            comment,
+            screenshot
+
+        })
+        setIsSendingFeedback(false)
         onFeedbackSend()
     }
 
@@ -61,9 +73,9 @@ export const FeedbackContentStep = ({
                     />
                     <button
                         type="submit"
-                        disabled={comment.length === 0}
+                        disabled={comment.length === 0 || isSendingFeedback }
                         className="p-2 bg-brand-500 rounded-md border-transparent flex-1 flex justify-center items-center text-sm hover:bg-brand-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:ring-brand-500 transition-colors disabled:opacity-50 disabled:hover:bg-brand-500"
-                    > Enviar feedback
+                    > {isSendingFeedback ? <LoadgingImage /> : 'Enviar feedback'}
                     </button>
                 </footer>
             </form>
